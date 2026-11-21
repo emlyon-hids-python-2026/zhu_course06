@@ -1,0 +1,20 @@
+City;Country;Customer Name;Manufacturer;Order Date;Order ID;Product Name;Region;Segment;Ship Date;Ship Mode;State/Province;Sub-Category;Quantity;Unit Price
+West Bromwich;United Kingdom;Ellis Ballard;Canon;02/08/2017;ES-2017-5113958;Medicine 1;North;Corporate;07/08/2017;Second Class;England;Imaging Systems;3;142
+West Bromwich;United Kingdom;Ellis Ballard;Hoover;02/08/2017;ES-2017-5113958;Medicine 2;North;Corporate;07/08/2017;Second Class;England;Medical Refrigeration Units;7;568
+West Bromwich;United Kingdom;Ellis Ballard;Accos;02/08/2017;ES-2017-5113958;Medicine 3;North;Corporate;07/08/2017;Second Class;England;Surgical Instruments;3;14
+Le Bouscat;France;Logan Haushalter;Hon;20/06/2017;ES-2017-2510515;Medicine 4;Central;Consumer;20/06/2017;Same Day;Aquitaine-Limousin-Poitou-Charentes;Over-the-Counter (OTC) Medicines;2;12
+Le Bouscat;France;Logan Haushalter;Hamilton Beach;20/06/2017;ES-2017-2510515;Medicine 5;Central;Consumer;20/06/2017;Same Day;Aquitaine-Limousin-Poitou-Charentes;Medical Refrigeration Units;5;488
+Le Bouscat;France;Logan Haushalter;Binney & Smith;20/06/2017;ES-2017-2510515;Medicine 6;Central;Consumer;20/06/2017;Same Day;Aquitaine-Limousin-Poitou-Charentes;Medical Consumables;1;12
+Le Bouscat;France;Logan Haushalter;Samsung;20/06/2017;ES-2017-2510515;Medicine 7;Central;Consumer;20/06/2017;Same Day;Aquitaine-Limousin-Poitou-Charentes;Diagnostic Tools;4;541
+Le Bouscat;France;Logan Haushalter;Rogers;20/06/2017;ES-2017-2510515;Medicine 8;Central;Consumer;20/06/2017;Same Day;Aquitaine-Limousin-Poitou-Charentes;Prescription Drugs;5;27
+Aachen;Germany;Jasper Cacioppo;GlobeWeis;18/09/2017;ES-2017-5677397;Medicine 9;Central;Consumer;18/09/2017;Same Day;North Rhine-Westphalia;Laboratory Reagents;6;21
+Barcelona;Spain;Deborah Brumfield;Cardinal;02/06/2016;ES-2016-2801336;Medicine 10;South;Home Office;06/06/2016;Standard Class;Catalonia;Wound Care Products;2;51
+Alphen aan den Rijn;Netherlands;Barry Französisch;Advantus;21/06/2017;IT-2017-2644618;Medicine 11;Central;Corporate;25/06/2017;Standard Class;South Holland;Surgical Instruments;2;7
+Littlehampton;United Kingdom;Christina Anderson;Brother;28/09/2016;ES-2016-3186072;Medicine 12;North;Consumer;02/10/2016;Standard Class;England;Imaging Systems;5;378
+Littlehampton;United Kingdom;Christina Anderson;Logitech;28/09/2016;ES-2016-3186072;Medicine 13;North;Consumer;02/10/2016;Standard Class;England;Medical Devices;4;30
+Littlehampton;United Kingdom;Christina Anderson;Brother;28/09/2016;ES-2016-3186072;Medicine 14;North;Consumer;02/10/2016;Standard Class;England;Imaging Systems;3;380
+Taverny;France;Thomas Boland;Stiletto;27/08/2016;ES-2016-5235241;Medicine 15;Central;Corporate;28/08/2016;Same Day;Ile-de-France;Personal Protective Equipment (PPE);2;42
+Taverny;France;Thomas Boland;Canon;27/08/2016;ES-2016-5235241;Medicine 16;Central;Corporate;28/08/2016;Same Day;Ile-de-France;Imaging Systems;2;269
+Taverny;France;Thomas Boland;Binney & Smith;27/08/2016;ES-2016-5235241;Medicine 17;Central;Corporate;28/08/2016;Same Day;Ile-de-France;Medical Consumables;3;52
+Karlsruhe;Germany;Vivian Mathis;BIC;09/12/2016;ES-2016-4620955;Medicine 18;Central;Consumer;11/12/2016;Second Class;Baden-Württemberg;Medical Consumables;2;29
+Karlsruhe;Germany;Vivian Mathis;Eldon;09/12/2016;ES-2016-4620955;Medicine 19;Central;Consumer;11/12/2016;Second Class;Baden-Württemberg;Prescription Drugs;3;15
