@@ -1,194 +1,232 @@
-"""
-MedicStore - Sales reporting
-
-Same analysis as notebooks/analysis.ipynb just organised in functions:
-each step of the pipeline is a function, and `main()` calls them in order.
+"""You are the manager of the company MedicStore that operates in Europe
+Your boss, the CEO, asks you for a reporting in order to:
+Analyze your sales, profit, profit per order, profit ratio, quantity from 2016 to 2020 and break by country
+Monitor the discounts
+Identify which subcategory have low profit ratio and high discount average
+Shared with all company users through internet navigator / smartphone
 
 Run it from the project root:
 
-    uv run scripts/analysis_functions.py
+    uv run scripts/medicstore.py
 """
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import pandas as pd
-from openpyxl.drawing.image import Image
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-OUTPUT_DIR = DATA_DIR / "output_v2"
+OUTPUT_DIR = DATA_DIR / "output_v3"
 
 
-# --- Part 1: consolidation ----------------------------------------------
+# --- Objective 1: consolidation ----------------------------------------------
 
 
 def load_data(data_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Load the two parts of the sales and the mapping table and return them as three DataFrames"""
-    sales_part1 = pd.read_csv(data_dir / "Sales_MedicStore_part1.csv", sep=";")
-    sales_part2 = pd.read_csv(data_dir / "Sales_MedicStore_part2.csv", sep=";")
-    mapping = pd.read_excel(data_dir / "Mapping.xlsx")
-    return sales_part1, sales_part2, mapping
+    """Load the two parts of the sales and the mapping table."""
+    part1 = pd.read_csv(data_dir / "Sales_MedicStore_part1.csv")
+    part2 = pd.read_csv(data_dir / "Sales_MedicStore_part2.csv")
+    mapping = pd.read_csv(data_dir / "Mapping.csv")
+    return part1, part2, mapping
 
 
 def consolidate(
-    sales_part1: pd.DataFrame, sales_part2: pd.DataFrame, mapping: pd.DataFrame
+    part1: pd.DataFrame, part2: pd.DataFrame, mapping: pd.DataFrame
 ) -> pd.DataFrame:
-    """Concatenate the two files, merge them with the mapping table and compute total_sales"""
-    sales = pd.concat([sales_part1, sales_part2], ignore_index=True)
-    df_final = sales.merge(mapping, on="Sub-Category", how="left")
+    """Concatenate the two parts, then merge them with the mapping table."""
+    sales = pd.concat([part1, part2], ignore_index=True)
+    df_final = sales.merge(mapping, on="Sub_Category", how="left")
 
     assert len(df_final) == len(sales), "The merge changed the number of lines"
     assert df_final["Category"].notna().all(), (
-        "Some sub-categories are not in the mapping table"
+        "To check if there are any subcategories not in the mapping table"
     )
-
-    df_final["total_sales"] = df_final["Quantity"] * df_final["Unit Price"]
     return df_final
 
 
-# --- Part 2: questions ----------------------------------------------------
+# --- Objective 2: questions ----------------------------------------------------
 
 
-def compute_shapes(datasets: dict[str, pd.DataFrame]) -> pd.DataFrame:
-    """Technical Q1: number of lines and columns of each dataset"""
+def compute_shapes(df: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    """Technical Q1: number of lines and columns of each dataset."""
     return pd.DataFrame(
         {
-            "dataset": list(datasets),
+            "dataset": df.head(5),
             "nb_lines": [df.shape[0] for df in datasets.values()],
             "nb_columns": [df.shape[1] for df in datasets.values()],
         }
     )
 
 
-def top_customers(df: pd.DataFrame, n: int = 3) -> pd.Series:
-    """Business Q3: the `n` customers with the most orders (unique Order IDs)."""
-    return (
-        df.groupby("Customer Name")["Order ID"]
-        .nunique()
-        .sort_values(ascending=False)
-        .head(n)
-    )
+# def prevalence_by(df: pd.DataFrame, column: str) -> pd.Series:
+#     """Prevalence of diabetes (mean of the 0/1 `diabetes` column) for each value of `column`."""
+#     return df.groupby(column)["diabetes"].mean()
 
 
-def answer_business_questions(df: pd.DataFrame) -> dict[str, object]:
-    """Business Q1 to Q5: return a dictionary {question: answer}."""
-    total_sales_amount = df["total_sales"].sum()
-    total_sales_france = df.loc[df["Country"] == "France", "total_sales"].sum()
+# def answer_business_questions(df: pd.DataFrame) -> dict[str, object]:
+#     """Business Q1 to Q8: return a dictionary {question: answer}."""
+#     by_gender = prevalence_by(df, "gender")
+#     age_by_diabetes = df.groupby("diabetes")["age"].mean()
+#     markers = df.groupby("diabetes")[["HbA1c_level", "blood_glucose_level"]].mean()
+#     by_hypertension = prevalence_by(df, "hypertension")
+#     by_smoking = prevalence_by(df, "smoking_history").sort_values(ascending=False)
+#     is_obese = df["bmi"] >= 30
 
-    return {
-        "How many orders do we have": df["Order ID"].nunique(),
-        "What is the total sales amount": total_sales_amount,
-        "Who are the top 3 customers (order count)": ", ".join(top_customers(df).index),
-        "What is the total Sales for France": total_sales_france,
-        "How much does the total Sales for France represent compare to the total global Sales": total_sales_france
-        / total_sales_amount,
-    }
-
-
-# --- Part 3: graphs -------------------------------------------------------
-
-
-def save_bar_chart(series: pd.Series, title: str, path: Path, rot: int = 90) -> Path:
-    """Save a bar chart of `series` as a PNG file."""
-    fig, ax = plt.subplots()
-    series.plot.bar(ax=ax, title=title, rot=rot)
-    fig.savefig(path, bbox_inches="tight")
-    plt.close(fig)
-    return path
-
-
-def make_graphs(df: pd.DataFrame, output_dir: Path) -> list[Path]:
-    """Create the graphs of Objective 3 and return their paths."""
-    orders_by_country = (
-        df.groupby("Country")["Order ID"].nunique().sort_values(ascending=False)
-    )
-    sales_by_category = (
-        df.groupby("Category")["total_sales"].sum().sort_values(ascending=False)
-    )
-    return [
-        save_bar_chart(
-            orders_by_country,
-            "Number of orders per country",
-            output_dir / "orders_per_country.png",
-        ),
-        save_bar_chart(
-            sales_by_category,
-            "Total sales per category",
-            output_dir / "sales_per_category.png",
-            rot=0,
-        ),
-    ]
+#     return {
+#         "How many patients were screened": len(df),
+#         "How many patients are diabetic": df["diabetes"].sum(),
+#         "What is the prevalence of diabetes": df["diabetes"].mean(),
+#         "What is the prevalence of diabetes for women": by_gender["Female"],
+#         "What is the prevalence of diabetes for men": by_gender["Male"],
+#         "What is the average age of diabetic patients": age_by_diabetes[1],
+#         "What is the average age of non-diabetic patients": age_by_diabetes[0],
+#         "What is the prevalence of diabetes for patients with BMI >= 30": df.loc[
+#             is_obese, "diabetes"
+#         ].mean(),
+#         "What is the prevalence of diabetes for patients with BMI < 30": df.loc[
+#             ~is_obese, "diabetes"
+#         ].mean(),
+#         "What is the average HbA1c_level of diabetic patients": markers.loc[
+#             1, "HbA1c_level"
+#         ],
+#         "What is the average HbA1c_level of non-diabetic patients": markers.loc[
+#             0, "HbA1c_level"
+#         ],
+#         "What is the average blood_glucose_level of diabetic patients": markers.loc[
+#             1, "blood_glucose_level"
+#         ],
+#         "What is the average blood_glucose_level of non-diabetic patients": markers.loc[
+#             0, "blood_glucose_level"
+#         ],
+#         "How many times higher is the prevalence with hypertension": by_hypertension[1]
+#         / by_hypertension[0],
+#         "Which smoking_history category has the highest prevalence": by_smoking.index[
+#             0
+#         ],
+#     }
 
 
-# --- Part 4: export -------------------------------------------------------
+# # --- Objective 3: graphs -------------------------------------------------------
 
 
-def export_analysis(
-    path: Path,
-    df_shapes: pd.DataFrame,
-    df_describe: pd.DataFrame,
-    df_analysis: pd.DataFrame,
-    top3: pd.Series,
-    graphs: list[Path],
-) -> None:
-    """Export the tables and the graphs into one Excel file, one sheet each"""
-    with pd.ExcelWriter(path, engine="openpyxl") as writer:
-        df_shapes.to_excel(writer, sheet_name="technical_q1_shapes", index=False)
-        df_describe.to_excel(writer, sheet_name="technical_q5_describe")
-        df_analysis.to_excel(writer, sheet_name="business_questions", index=False)
-        top3.to_excel(writer, sheet_name="business_q3_top3")
-
-        sheet = writer.book.create_sheet("graphs")
-        for i, graph in enumerate(graphs):
-            sheet.add_image(Image(graph), f"A{1 + 25 * i}")
+# def save_bar_chart(series: pd.Series, title: str, path: Path) -> Path:
+#     """Save a bar chart of `series` as a PNG file."""
+#     fig, ax = plt.subplots()
+#     series.plot.bar(ax=ax, title=title, rot=0)
+#     fig.savefig(path, bbox_inches="tight")
+#     plt.close(fig)
+#     return path
 
 
-# --- Pipeline ------------------------------------------------------------------
+# def save_histogram_by_diabetes(
+#     df: pd.DataFrame, column: str, title: str, path: Path
+# ) -> Path:
+#     """Save the distribution of `column` for diabetic and non-diabetic patients as a PNG file."""
+#     fig, ax = plt.subplots()
+#     df.groupby("diabetes")[column].plot.hist(
+#         ax=ax, bins=40, alpha=0.5, density=True, legend=True
+#     )
+#     ax.set_title(title)
+#     fig.savefig(path, bbox_inches="tight")
+#     plt.close(fig)
+#     return path
 
 
-def main() -> None:
-    """Run the whole pipeline: load, consolidate, analyse, export"""
-    OUTPUT_DIR.mkdir(exist_ok=True)
-
-    # Part 1
-    sales_part1, sales_part2, mapping = load_data(DATA_DIR)
-    df_final = consolidate(sales_part1, sales_part2, mapping)
-    df_final.to_excel(OUTPUT_DIR / "medicstore_final.xlsx", index=False)
-
-    # Part 2
-    df_shapes = compute_shapes(
-        {
-            "Sales_MedicStore_part1.csv": sales_part1,
-            "Sales_MedicStore_part2.csv": sales_part2,
-            "Mapping.xlsx": mapping,
-            "final dataset": df_final,
-        }
-    )
-    df_describe = df_final.describe(include="all")
-    dict_analysis = {
-        "How many lines are in Sales_MedicStore_part1.csv": len(sales_part1),
-        "How many lines are in Sales_MedicStore_part2.csv": len(sales_part2),
-        "How many lines are in Mapping.xlsx": len(mapping),
-        **answer_business_questions(df_final),
-    }
-    df_analysis = pd.DataFrame(
-        list(dict_analysis.items()), columns=["Question", "Answer"]
-    )
-
-    # Parts 3 and 4
-    graphs = make_graphs(df_final, OUTPUT_DIR)
-    export_analysis(
-        OUTPUT_DIR / "medicstore_analysis.xlsx",
-        df_shapes,
-        df_describe,
-        df_analysis,
-        top_customers(df_final),
-        graphs,
-    )
-
-    print(df_analysis.to_string(index=False))
-    print(f"\nAnalysis exported to {OUTPUT_DIR}")
+# def make_graphs(df: pd.DataFrame, output_dir: Path) -> list[Path]:
+#     """Create the 4 graphs of Objective 3 and return their paths."""
+#     return [
+#         save_bar_chart(
+#             df["gender"].value_counts(),
+#             "Number of patients per gender",
+#             output_dir / "patients_per_gender.png",
+#         ),
+#         save_bar_chart(
+#             prevalence_by(df, "gender"),
+#             "Prevalence of diabetes per gender",
+#             output_dir / "prevalence_per_gender.png",
+#         ),
+#         save_histogram_by_diabetes(
+#             df,
+#             "age",
+#             "Distribution of age (0 = non-diabetic, 1 = diabetic)",
+#             output_dir / "age_distribution.png",
+#         ),
+#         save_histogram_by_diabetes(
+#             df,
+#             "blood_glucose_level",
+#             "Distribution of blood glucose level (0 = non-diabetic, 1 = diabetic)",
+#             output_dir / "blood_glucose_distribution.png",
+#         ),
+#     ]
 
 
-if __name__ == "__main__":
-    main()
+# --- Objective 4: export -------------------------------------------------------
+
+
+# def export_analysis(
+#     path: Path,
+#     df_shapes: pd.DataFrame,
+#     df_describe: pd.DataFrame,
+#     df_analysis: pd.DataFrame,
+#     graphs: list[Path],
+# ) -> None:
+#     """Export the tables and the graphs into one Excel file, one sheet each."""
+#     with pd.ExcelWriter(path) as writer:
+#         df_shapes.to_excel(writer, sheet_name="technical_q1_shapes", index=False)
+#         df_describe.to_excel(writer, sheet_name="technical_q5_describe")
+#         df_analysis.to_excel(writer, sheet_name="business_questions", index=False)
+
+#         sheet = writer.book.create_sheet("graphs")
+#         for i, graph in enumerate(graphs):
+#             sheet.add_image(Image(graph), f"A{1 + 25 * i}")
+
+
+# # --- Pipeline ------------------------------------------------------------------
+
+
+# def main() -> None:
+#     """Run the whole pipeline: load, consolidate, analyse, export."""
+#     OUTPUT_DIR.mkdir(exist_ok=True)
+
+#     # Objective 1
+#     part1, part2, mapping = load_data(DATA_DIR)
+#     df_final = consolidate(part1, part2, mapping)
+#     df_final.to_excel(OUTPUT_DIR / "diabetes_final.xlsx", index=False)
+
+#     # Objective 2
+#     df_shapes = compute_shapes(
+#         {
+#             "diabetes_part1.csv": part1,
+#             "diabetes_part2.csv": part2,
+#             "mapping.csv": mapping,
+#             "final dataset": df_final,
+#         }
+#     )
+#     df_describe = df_final.describe(include="all")
+#     # Duplicates are kept: without a patient identifier, two patients can share the same profile
+#     dict_analysis = {
+#         "How many lines are in diabetes_part1.csv": len(part1),
+#         "How many lines are in diabetes_part2.csv": len(part2),
+#         "How many lines are in mapping.csv": len(mapping),
+#         "How many lines are exact duplicates": df_final.duplicated().sum(),
+#         **answer_business_questions(df_final),
+#     }
+#     df_analysis = pd.DataFrame(
+#         list(dict_analysis.items()), columns=["Question", "Answer"]
+#     )
+
+#     # Objectives 3 and 4
+#     graphs = make_graphs(df_final, OUTPUT_DIR)
+#     export_analysis(
+#         OUTPUT_DIR / "diabetes_analysis.xlsx",
+#         df_shapes,
+#         df_describe,
+#         df_analysis,
+#         graphs,
+#     )
+
+#     print(df_analysis.to_string(index=False))
+#     print(f"\nAnalysis exported to {OUTPUT_DIR}")
+
+
+# if __name__ == "__main__":
+#     main()
